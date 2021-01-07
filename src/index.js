@@ -156,6 +156,9 @@ function onAssetsLoaded() {
   //Function to start playing.
   function startPlay() {
     counter--;
+    if (counter == -1) {
+      counter = 3;
+    }
     money -= 5;
     moneyText.updateText(false);
     moneyText.text = money;
@@ -166,7 +169,7 @@ function onAssetsLoaded() {
     for (let i = 0; i < reels.length; i++) {
       const r = reels[i];
       const extra = Math.floor(Math.random() * 3);
-      const target = r.position + 1;
+      const target = r.position + 1; /* 0 + i * 5 + extra */
       const time = 500 + i * 600 + extra * 600;
       tweenTo(
         r,
@@ -184,20 +187,19 @@ function onAssetsLoaded() {
   function reelsComplete() {
     running = false;
 
-    checkResult(resultArray);
+    checkResult();
     if (gameWin) {
-      money += 5;
+      money += 10;
       moneyText.updateText(false);
       moneyText.text = money;
-      gameWin = false;
       message.updateText(false);
       message.text = "Win";
+      gameWin = false;
     }
   }
 
   app.ticker.add((delta) => {
     // Update the slots.
-
     for (let i = 0; i < reels.length; i++) {
       const r = reels[i];
 
@@ -223,8 +225,16 @@ function onAssetsLoaded() {
           );
           s.x = Math.round((SYMBOL_SIZE - s.width) / 2);
 
-          /* console.log(r.symbols[1].texture.textureCacheIds[0]); */
-          resultArray.push(r.symbols[1]._texture.textureCacheIds[0]);
+          let obj = r.symbols[counter]._texture.textureCacheIds[0];
+          if (i == 0) {
+            resultArray[0] = r.symbols[counter]._texture.textureCacheIds[0];
+          } else if (i == 1) {
+            resultArray[1] = r.symbols[counter]._texture.textureCacheIds[0];
+          } else if (i == 2) {
+            resultArray[2] = r.symbols[counter]._texture.textureCacheIds[0];
+          }
+
+          /* debugger; */
         }
       }
     }
@@ -285,11 +295,12 @@ function easing(amount) {
   return (t) => --t * t * ((amount + 1) * t + amount) + 1;
 }
 
-function checkResult(result) {
+function checkResult() {
   let count = {};
-  result.forEach((i) => (count[i] = (count[i] || 0) + 1));
+  resultArray.forEach((i) => (count[i] = (count[i] || 0) + 1));
 
   console.log(count);
+
   for (const property in count) {
     if (count[property] >= 2 /*  && property == "assets/wild.png" */) {
       gameWin = true;
