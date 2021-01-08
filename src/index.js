@@ -63,8 +63,9 @@ let gameWin = false;
 let message = new PIXI.Text(gameWin == true ? "Win" : "");
 let money = 100;
 let moneyText = new PIXI.Text(money);
-moneyText.x = 100;
-moneyText.y = 200;
+
+let reelsOffset = [];
+let reelsOffsetToReed = [2, 2, 2];
 
 /* <-------------Load reel, symbols and startListener -----------> */
 function onAssetsLoaded() {
@@ -149,16 +150,15 @@ function onAssetsLoaded() {
   });
 
   app.stage.addChild(message);
+
+  moneyText.x = 100;
+  moneyText.y = 260;
   app.stage.addChild(moneyText);
 
   let running = false;
 
   //Function to start playing.
   function startPlay() {
-    counter--;
-    if (counter == -1) {
-      counter = 3;
-    }
     money -= 5;
     moneyText.updateText(false);
     moneyText.text = money;
@@ -166,10 +166,14 @@ function onAssetsLoaded() {
     if (running) return;
     running = true;
 
+    //for each i save target and then pass to r.symbols[counter]._texture.textureCacheIds[0];
+
     for (let i = 0; i < reels.length; i++) {
       const r = reels[i];
       const extra = Math.floor(Math.random() * 3);
-      const target = r.position + 1; /* 0 + i * 5 + extra */
+      const target = r.position + extra + i + 1 * 2; /* 0 + i * 5 + extra */
+
+      reelsOffset[i] = extra + i + 1 * 2;
       const time = 500 + i * 600 + extra * 600;
       tweenTo(
         r,
@@ -181,12 +185,21 @@ function onAssetsLoaded() {
         i === reels.length - 1 ? reelsComplete : null
       );
     }
+
+    for (let i = 0; i < 3; i++) {
+      for (let c = 0; c < reelsOffset[i]; c++) {
+        reelsOffsetToReed[i]--;
+        if (reelsOffsetToReed[i] == -1) {
+          reelsOffsetToReed[i] = 3;
+        }
+      }
+    }
   }
 
   //Reels done handler
   function reelsComplete() {
     running = false;
-
+    counter = 2;
     checkResult();
     if (gameWin) {
       money += 10;
@@ -225,13 +238,15 @@ function onAssetsLoaded() {
           );
           s.x = Math.round((SYMBOL_SIZE - s.width) / 2);
 
-          let obj = r.symbols[counter]._texture.textureCacheIds[0];
           if (i == 0) {
-            resultArray[0] = r.symbols[counter]._texture.textureCacheIds[0];
+            resultArray[0] =
+              r.symbols[reelsOffsetToReed[i]]._texture.textureCacheIds[0];
           } else if (i == 1) {
-            resultArray[1] = r.symbols[counter]._texture.textureCacheIds[0];
+            resultArray[1] =
+              r.symbols[reelsOffsetToReed[i]]._texture.textureCacheIds[0];
           } else if (i == 2) {
-            resultArray[2] = r.symbols[counter]._texture.textureCacheIds[0];
+            resultArray[2] =
+              r.symbols[reelsOffsetToReed[i]]._texture.textureCacheIds[0];
           }
 
           /* debugger; */
@@ -307,3 +322,4 @@ function checkResult() {
     }
   }
 }
+//TODO:FIX VIEW AND ADD LOADING SCENE AND FETCH FROM JSON
