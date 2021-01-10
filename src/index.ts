@@ -24,9 +24,14 @@ const reels: MySymbol[] = [];
 let counter = 2;
 const resultArray: any = [];
 let gameWin = false;
-const message = new PIXI.Text(gameWin ? "Win" : "");
+const style = new PIXI.TextStyle({
+  fontFamily: "Arial",
+  fontSize: 36,
+});
+const message = new PIXI.Text(gameWin ? "Win" : "", style);
+
 let money = 100;
-const moneyText = new PIXI.Text(money.toString());
+const moneyText = new PIXI.Text("$" + money.toString());
 
 const reelsOffset: any = [];
 const reelsOffsetToReed = [2, 2, 2];
@@ -108,9 +113,15 @@ window.onload = async (): Promise<void> => {
   const spinButtonTexture = Texture.from("assets/BTN_Spin.png");
   const spinButton = new Sprite(spinButtonTexture);
 
+  const spinButtonDisabledTexture = Texture.from("assets/BTN_Spin_d.png");
+  const spinButtonDisabled = new Sprite(spinButtonDisabledTexture);
+
   spinButton.position.set(700, 220);
+  spinButtonDisabled.position.set(700, 220);
+  spinButtonDisabled.visible = false;
 
   stage.addChild(spinButton);
+  stage.addChild(spinButtonDisabled);
 
   //Set the interactivity
   spinButton.interactive = true;
@@ -129,9 +140,12 @@ window.onload = async (): Promise<void> => {
 
   //Function to start playing.
   function startPlay() {
+    spinButtonDisabled.visible = true;
+    spinButton.interactive = false;
+    spinButton.buttonMode = false;
     money -= 5;
     moneyText.updateText(false);
-    moneyText.text = money.toString();
+    moneyText.text = "$" + money.toString();
 
     if (running) return;
     running = true;
@@ -146,7 +160,7 @@ window.onload = async (): Promise<void> => {
         Number(r.position) + extra + i + 2 * 2; /* + extra */ /*  + extra + i + 1 * 2; */ /* 0 + i * 5 + extra */
 
       reelsOffset[i] = extra + i + 2 * 2;
-      const time = 500 + i * 600 + extra * 600;
+      const time = 50 + i * 600 + extra * 600;
       tweenTo(r, "position", target, time, easing(0.5), null, i === reels.length - 1 ? reelsComplete : null);
     }
 
@@ -164,14 +178,44 @@ window.onload = async (): Promise<void> => {
   function reelsComplete() {
     running = false;
     counter = 2;
+
     checkResult();
+
+    const winGraphic = new PIXI.Graphics();
+
     if (gameWin) {
+      winGraphic.beginFill(0x81db58, 0.5);
+      const width = app.screen.width / 4;
+      const height = 180;
+      winGraphic.drawRoundedRect(app.screen.width / 2 - width * 1.75, height, width, height, 20);
+      message.x = app.screen.width / 2 - width * 1.3;
+      message.y = 250;
+
+      stage.addChild(winGraphic);
+
       money += 10;
       moneyText.updateText(false);
       moneyText.text = money.toString();
       message.updateText(false);
       message.text = "Win";
       gameWin = false;
+
+      winGraphic.addChild(message);
+
+      /* window.addEventListener("click", () => {
+        app.stage.removeChild(winGraphic);
+      }); */
+
+      setTimeout(() => {
+        stage.removeChild(winGraphic);
+      }, 3000);
+    }
+
+    if (money) {
+      spinButtonDisabled.visible = false;
+      spinButton.visible = true;
+      spinButton.interactive = true;
+      spinButton.buttonMode = true;
     }
   }
 
@@ -275,11 +319,11 @@ function checkResult() {
   resultArray.forEach((i: any) => (count[i] = (count[i] || 0) + 1));
 
   for (const property in count) {
-    /*  && property == "assets/wild.png" */
-    /* if (count[property] >= 2 ) {
-      gameWin = true;
-    } */
-    if (count[property] > 2 && property != "assets/wild.png") {
+    if (
+      (count[property] > 2 && property != "assets/wild.png") ||
+      (count[property] == 2 && property == "assets/wild.png") ||
+      (count[property] == 2 && count["assets/wild.png"] == 1)
+    ) {
       gameWin = true;
     }
   }
