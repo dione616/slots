@@ -1,5 +1,7 @@
 import * as PIXI from "pixi.js";
 import { MySymbol } from "./Symbol";
+import Core from "./loader";
+
 const Application = PIXI.Application;
 const Texture = PIXI.Texture;
 const Sprite = PIXI.Sprite;
@@ -11,7 +13,7 @@ const gameWidth = 800;
 const gameHeight = 600;
 
 const app = new Application({
-  backgroundColor: 0x000000,
+  backgroundColor: 0x2f6a38,
   width: gameWidth,
   height: gameHeight,
 });
@@ -21,8 +23,7 @@ const stage = app.stage;
 const REEL_WIDTH = 200;
 const SYMBOL_SIZE = 150; /* 180 */
 const reels: MySymbol[] = [];
-let counter = 2;
-const resultArray: any = [];
+const resultArray: string[] = [];
 let gameWin = false;
 const style = new PIXI.TextStyle({
   fontFamily: "Arial",
@@ -41,6 +42,7 @@ export const slotTextures = [
   Texture.from("assets/wild.png"),
   Texture.from("assets/straw.png"),
   Texture.from("assets/pine.png"),
+  Texture.from("assets/wild.png"),
   Texture.from("assets/lemon.png"),
   Texture.from("assets/green.png"),
   Texture.from("assets/grape.png"),
@@ -52,12 +54,6 @@ window.onload = async (): Promise<void> => {
   document.body.appendChild(app.view);
 
   resizeCanvas();
-
-  /* const birdFromSprite = getBird();
-    birdFromSprite.anchor.set(0.5, 0.5);
-    birdFromSprite.position.set(gameWidth / 2, gameHeight / 2);
-
-    stage.addChild(birdFromSprite); */
 
   const background = Texture.from("assets/BG.png");
   const BG = new MySymbol(background);
@@ -103,12 +99,18 @@ window.onload = async (): Promise<void> => {
   stage.addChild(reelContainer);
 
   // Build top & bottom covers and position reelContainer
-  const margin = (app.screen.height - SYMBOL_SIZE * 3) / 5;
+
+  const margin = (app.screen.height - SYMBOL_SIZE * 3) / 6.6;
   reelContainer.y = margin;
 
-  const bottom = new PIXI.Graphics();
-  bottom.beginFill(0, 1);
-  bottom.drawRect(0, SYMBOL_SIZE * 3 + margin, app.screen.width, margin);
+  const bottomText = new PIXI.Text("Press play to start", style);
+
+  const width = app.screen.width;
+  const height = margin;
+
+  bottomText.position.set(250, 550);
+
+  stage.addChild(bottomText);
 
   const spinButtonTexture = Texture.from("assets/BTN_Spin.png");
   const spinButton = new Sprite(spinButtonTexture);
@@ -132,8 +134,7 @@ window.onload = async (): Promise<void> => {
 
   stage.addChild(message);
 
-  moneyText.x = 10;
-  moneyText.y = 260;
+  moneyText.position.set(700, 350);
   stage.addChild(moneyText);
 
   let running = false;
@@ -160,7 +161,7 @@ window.onload = async (): Promise<void> => {
         Number(r.position) + extra + i + 2 * 2; /* + extra */ /*  + extra + i + 1 * 2; */ /* 0 + i * 5 + extra */
 
       reelsOffset[i] = extra + i + 2 * 2;
-      const time = 50 + i * 600 + extra * 600;
+      const time = 500 + i * 600 + extra * 600;
       tweenTo(r, "position", target, time, easing(0.5), null, i === reels.length - 1 ? reelsComplete : null);
     }
 
@@ -177,7 +178,6 @@ window.onload = async (): Promise<void> => {
   //Reels done handler
   function reelsComplete() {
     running = false;
-    counter = 2;
 
     checkResult();
 
@@ -187,9 +187,9 @@ window.onload = async (): Promise<void> => {
       winGraphic.beginFill(0x81db58, 0.5);
       const width = app.screen.width / 4;
       const height = 180;
-      winGraphic.drawRoundedRect(app.screen.width / 2 - width * 1.75, height, width, height, 20);
-      message.x = app.screen.width / 2 - width * 1.3;
-      message.y = 250;
+      winGraphic.drawRoundedRect(app.screen.width / 2 - width * 1.75, height, width, 130, 20);
+      message.x = 320;
+      message.y = 240;
 
       stage.addChild(winGraphic);
 
@@ -202,9 +202,9 @@ window.onload = async (): Promise<void> => {
 
       winGraphic.addChild(message);
 
-      /* window.addEventListener("click", () => {
+      window.addEventListener("click", () => {
         app.stage.removeChild(winGraphic);
-      }); */
+      });
 
       setTimeout(() => {
         stage.removeChild(winGraphic);
@@ -235,7 +235,7 @@ window.onload = async (): Promise<void> => {
         const s = r.symbols[j];
 
         const prevy = s.y; //prev position
-        s.y = ((Number(r.position) + j) % r.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE;
+        s.y = ((Number(r.position) + j) % r.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE * 1.1;
         if (s.y < 0 && prevy > SYMBOL_SIZE) {
           // Detect going over and swap a texture.
 
@@ -316,6 +316,7 @@ function easing(amount: number) {
 
 function checkResult() {
   const count: any = {};
+
   resultArray.forEach((i: any) => (count[i] = (count[i] || 0) + 1));
 
   for (const property in count) {
@@ -327,26 +328,37 @@ function checkResult() {
       gameWin = true;
     }
   }
-  console.log(count);
-  console.log(gameWin);
 }
 
 async function loadGameAssets(): Promise<void> {
   return new Promise((res, rej) => {
     const loader = PIXI.Loader.shared;
-    loader.add("rabbit", "./assets/simpleSpriteSheet.json");
 
-    app.loader.add([
-      "assets/BG.png",
-      "assets/BTN_Spin_d.png",
-      "assets/BTN_Spin.png",
-      "assets/wild.png",
-      "assets/straw.png",
-      "assets/pine.png",
-      "assets/lemon.png",
-      "assets/green.png",
-      "assets/grape.png",
+    const Loader = new PIXI.Graphics();
+    Loader.beginFill(0x81db58, 0.8);
+
+    loader.add([
+      { name: "bg", url: "assets/BG.png" },
+      { name: "spin_d", url: "assets/BTN_Spin_d.png" },
+      { name: "spin", url: "assets/BTN_Spin.png" },
+      { name: "wild", url: "assets/wild.png" },
+      { name: "straw", url: "assets/straw.png" },
+      { name: "pine", url: "assets/pine.png" },
+      { name: "lemon", url: "assets/lemon.png" },
+      { name: "green", url: "assets/green.png" },
+      { name: "grape", url: "assets/grape.png" },
     ]);
+
+    loader.onProgress.add((loader, res) => {
+      console.log(loader.progress);
+      console.log(res.texture);
+
+      const width = loader.progress;
+      const height = 50;
+      Loader.drawRoundedRect(0, height, width, height, 20);
+
+      app.stage.addChild(Loader);
+    });
 
     loader.onComplete.once(() => {
       res();
@@ -371,18 +383,3 @@ function resizeCanvas(): void {
 
   window.addEventListener("resize", resize);
 }
-
-/* function getBird(): PIXI.AnimatedSprite {
-    const bird = new PIXI.AnimatedSprite([
-        PIXI.Texture.from("birdUp.png"),
-        PIXI.Texture.from("birdMiddle.png"),
-        PIXI.Texture.from("birdDown.png"),
-    ]);
-
-    bird.loop = true;
-    bird.animationSpeed = 0.1;
-    bird.play();
-    bird.scale.set(3);
-
-    return bird;
-} */
