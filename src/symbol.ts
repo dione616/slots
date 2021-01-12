@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { slotTextures } from "./index";
+import { slotTextures } from "./resources";
 
 const Sprite = PIXI.Sprite;
 
