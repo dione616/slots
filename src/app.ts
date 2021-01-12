@@ -4,10 +4,10 @@ import { MySymbol } from "./symbol";
 import "./style.css";
 
 class Application {
-  public renderer;
-  public ticker;
-  public stage;
-  public loader: PIXI.Loader;
+  renderer;
+  ticker;
+  stage;
+  loader: PIXI.Loader;
   constructor() {
     this.renderer = new PIXI.Renderer({ backgroundColor: 0x2f6a38, width: 800, height: 600 });
     document.body.appendChild(this.renderer.view);
