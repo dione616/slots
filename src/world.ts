@@ -2,18 +2,23 @@ import * as PIXI from "pixi.js";
 import { app } from "./app";
 import { Reel } from "./entities/reel";
 import { slotTextures } from "./resources";
+import { MySymbol } from "./symbol";
 
 const REEL_WIDTH = 200;
 const SYMBOL_SIZE = 150;
 
-class World extends PIXI.Container {
+export class World extends PIXI.Container {
   reels: any[] = []; //reels: MySymbol[] = [];
-  reelContainer: PIXI.Container;
+  reelContainer: PIXI.Container = new PIXI.Container();
+  background = PIXI.Texture.from("assets/BG.png");
+  BG = new PIXI.Sprite(this.background);
+
   constructor() {
     super();
+    this.addChild(this.BG);
   }
 
-  populate() {
+  populate(): void {
     for (let i = 0; i < 3; i++) {
       const rc = new Reel();
       rc.x = i * REEL_WIDTH + 90;

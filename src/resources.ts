@@ -1,5 +1,6 @@
 import { MySymbol } from "./Symbol";
 import { app } from "./app";
+import { World } from "./world";
 
 const loader = new PIXI.Loader();
 
@@ -97,14 +98,15 @@ async function loadGameAssets(): Promise<void> {
 loader.load(() => {
   resizeCanvas();
 
-  const background = Texture.from("assets/BG.png");
-  const BG = new MySymbol(background);
+  // TODO : move to World
+  /* const background = Texture.from("assets/BG.png");
+  const BG = new PIXI.Sprite(background);
   BG.scale.set(0.85, 1);
 
-  app.stage.addChild(BG);
+  app.stage.addChild(BG); */
 
   //Build the reels
-  const reelContainer = new Container();
+  /* const reelContainer = new Container();
 
   for (let i = 0; i < 3; i++) {
     const rc = new Container();
@@ -138,12 +140,15 @@ loader.load(() => {
     }
     reels.push(reel);
   }
-  app.stage.addChild(reelContainer);
+  app.stage.addChild(reelContainer); */
+  const world = (app.world = new World());
 
+  world.populate();
+  app.stage.addChild(world);
   // Build top & bottom covers and position reelContainer
 
   const margin = (app.screen.height - SYMBOL_SIZE * 3) / 6.6;
-  reelContainer.y = margin;
+  /* reelContainer.y = margin; */
 
   const bottomText = new Text("Press play to start", style);
 
