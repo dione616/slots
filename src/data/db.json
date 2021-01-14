@@ -1,0 +1,8 @@
+[
+  { "name": "wild", "url": "assets/wild.png" },
+  { "name": "straw", "url": "assets/straw.png" },
+  { "name": "pine", "url": "assets/pine.png" },
+  { "name": "lemon", "url": "assets/lemon.png" },
+  { "name": "green", "url": "assets/green.png" },
+  { "name": "grape", "url": "assets/grape.png" }
+]

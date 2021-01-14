@@ -10,7 +10,11 @@ class Application {
   loader: PIXI.Loader;
   world: PIXI.Container = new PIXI.Container();
   constructor() {
-    this.renderer = new PIXI.Renderer({ backgroundColor: 0x2f6a38, width: 800, height: 600 });
+    this.renderer = new PIXI.Renderer({
+      backgroundColor: 0x000000,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
     document.body.appendChild(this.renderer.view);
     this.ticker = new PIXI.Ticker();
     this.stage = new PIXI.Container();
@@ -31,17 +35,4 @@ class Application {
   }
 }
 
-//declare global
-/* declare global {
-  namespace NodeJS {
-    interface Global {
-       document: Document;
-       window: any;
-       navigator: Navigator;
-  }
-} */
-
 export const app = ((global as any).app = new Application());
-/* console.log(global); */
-
-export default Application;
