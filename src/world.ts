@@ -62,6 +62,7 @@ export class World extends Container {
       if (app.loader.resources[key].name == "wild") {
         slotTextures.push(app.loader.resources[key].texture);
         slotTextures.push(app.loader.resources[key].texture);
+        slotTextures.push(app.loader.resources[key].texture);
       }
     }
 
@@ -334,10 +335,9 @@ export class World extends Container {
 
       for (const property in count) {
         if (
-          1 > 0
-          /* (count[property] > 2 && property != "wild") ||
+          (count[property] > 2 && property != "wild") ||
           (count[property] == 2 && property == "wild") ||
-          (count[property] == 2 && count["wild"] == 1) */
+          (count[property] == 2 && count["wild"] == 1)
         ) {
           this.gameWin = true;
         }

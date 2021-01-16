@@ -56,17 +56,6 @@ async function loadGameAssets(): Promise<void> {
   });
 }
 
-//Symbols textures
-export const slotTextures = [
-  PIXI.Texture.from("assets/wild.png"),
-  PIXI.Texture.from("assets/straw.png"),
-  PIXI.Texture.from("assets/pine.png"),
-  PIXI.Texture.from("assets/wild.png"),
-  PIXI.Texture.from("assets/lemon.png"),
-  PIXI.Texture.from("assets/green.png"),
-  PIXI.Texture.from("assets/grape.png"),
-];
-
 function resizeCanvas(): void {
   const resize = () => {
     app.renderer.resize(window.innerWidth, window.innerHeight);
