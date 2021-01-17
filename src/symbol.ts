@@ -5,10 +5,12 @@ const Sprite = PIXI.Sprite;
 export class MySymbol extends Sprite {
   constructor(texture: PIXI.Texture) {
     super(texture);
+    this.size = 110;
   }
 
-  public symbols: MySymbol[] = [];
+  symbols: MySymbol[] = [];
 
-  public previousPosition = 0;
-  public blur = 0;
+  previousPosition = 0;
+  blur = 0;
+  size = 110;
 }

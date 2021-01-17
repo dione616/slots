@@ -1,51 +1,34 @@
+import {
+  changeGameMoney,
+  changeGameResult,
+  changeGameWinsCounter,
+  gameWin,
+  message,
+  money,
+  moneyText,
+  reelsOffset,
+  reelsOffsetToReed,
+  resultArray,
+  slotTextures,
+  style,
+  wins,
+  winsText,
+} from "./utils/stats";
 import * as PIXI from "pixi.js";
 import { app } from "./app";
 import { Reel } from "./entities/reel";
-/* import { slotTextures } from "./resources"; */
 import { MySymbol } from "./symbol";
 
 const Texture = PIXI.Texture;
 const Sprite = PIXI.Sprite;
 const Container = PIXI.Container;
-const TextStyle = PIXI.TextStyle;
 const Text = PIXI.Text;
 const Graphics = PIXI.Graphics;
-
-const statsStyle = new TextStyle({
-  fontFamily: "Arial",
-  fontSize: 20,
-});
-let money = 100;
-let wins = 0;
-const moneyText = new Text("Money:$" + money, statsStyle);
-const winsText = new Text("Win: " + wins, statsStyle);
-
-const reelsOffset: any = [];
-const reelsOffsetToReed = [1, 1, 1];
-
-const slotTextures: PIXI.Texture[] = [];
 
 //WORLD
 export class World extends Container {
   reels: MySymbol[] = [];
   reelContainer: PIXI.Container = new Container();
-
-  REEL_WIDTH = 200;
-  SYMBOL_SIZE = 110;
-
-  resultArray: string[] = [];
-  gameWin = false;
-
-  style = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 36,
-    fill: ["white", "white"],
-  });
-  message = new Text(this.gameWin ? "Win" : "", this.style);
-
-  background = PIXI.Texture.from("assets/BG.png");
-  BG = new PIXI.Sprite(this.background);
-
   constructor() {
     super();
     app.stage.on("loaded", () => {
@@ -56,11 +39,13 @@ export class World extends Container {
     this.BG.width = 800;
   }
 
+  background = PIXI.Texture.from("assets/BG.png");
+  BG = new PIXI.Sprite(this.background);
+
   populate = (): void => {
     for (const key in app.loader.resources) {
       slotTextures.push(app.loader.resources[key].texture);
       if (app.loader.resources[key].name == "wild") {
-        slotTextures.push(app.loader.resources[key].texture);
         slotTextures.push(app.loader.resources[key].texture);
         slotTextures.push(app.loader.resources[key].texture);
       }
@@ -68,7 +53,7 @@ export class World extends Container {
 
     for (let i = 0; i < 3; i++) {
       const rc = new Reel();
-      rc.x = i * this.REEL_WIDTH + 80;
+      rc.x = i * rc.reelWidth + 80;
       this.reelContainer.addChild(rc);
       this.reelContainer.x = 30;
       this.reelContainer.y = 230;
@@ -90,9 +75,9 @@ export class World extends Container {
         const symbol = new MySymbol(texture);
 
         // Scale the symbol to fit symbol area.
-        symbol.y = j * this.SYMBOL_SIZE;
+        symbol.y = j * symbol.size;
         symbol.scale.x = symbol.scale.y = 0.5;
-        symbol.x = Math.round((this.SYMBOL_SIZE - symbol.width) / 2);
+        symbol.x = Math.round((symbol.size - symbol.width) / 2);
 
         //push to parent
         reel.symbols.push(symbol);
@@ -104,8 +89,7 @@ export class World extends Container {
 
     this.addChild(this.reelContainer);
 
-    const bottomText = new Text("Press play to start", this.style);
-
+    const bottomText = new Text("Press play to start", style);
     bottomText.position.set(250, 550);
 
     this.addChild(bottomText);
@@ -135,7 +119,7 @@ export class World extends Container {
       startPlay();
     });
 
-    this.addChild(this.message);
+    this.addChild(message);
 
     moneyText.position.set(665, 350);
     this.addChild(moneyText);
@@ -149,7 +133,7 @@ export class World extends Container {
       spinButtonDisabled.visible = true;
       spinButton.interactive = false;
       spinButton.buttonMode = false;
-      money -= 5;
+      changeGameMoney(false);
       moneyText.updateText(false);
       moneyText.text = "Money:$" + money.toString();
 
@@ -162,11 +146,33 @@ export class World extends Container {
         const r = this.reels[i];
 
         const extra = Number(Math.floor(Math.random() * 3));
-        const target = Number(r.position) + extra + i + 2 * 2;
+        const target = Number(r.position) + extra + i * 3 + 2 * 2;
 
-        reelsOffset[i] = extra + i + 2 * 2;
-        const time = 500 + i * 600 + extra * 600;
-        tweenTo(r, "position", target, time, easing(0.5), null, i === this.reels.length - 1 ? reelsComplete : null);
+        reelsOffset[i] = extra + i * 3 + 2 * 2;
+        const time = 500 + i * 600 + i * 600;
+        if (i === this.reels.length - 1) {
+          const args: TweenType = {
+            object: r,
+            property: "position",
+            target,
+            time,
+            easing: this.easing(0.5),
+            change: null,
+            complete: reelsComplete,
+          };
+          tweenTo(args);
+        } else {
+          const args: TweenType = {
+            object: r,
+            property: "position",
+            target,
+            time,
+            easing: this.easing(0.5),
+            change: null,
+            complete: null,
+          };
+          tweenTo(args);
+        }
       }
 
       for (let i = 0; i < 3; i++) {
@@ -183,68 +189,61 @@ export class World extends Container {
     const reelsComplete = () => {
       running = false;
 
-      checkResult();
+      this.checkResult();
 
       const winGraphic = new Graphics();
 
-      if (this.gameWin && money) {
+      if (gameWin && money) {
         winGraphic.beginFill(0x81db58, 0.5);
 
         winGraphic.drawRoundedRect(60, 220, 595, 80, 20);
-        this.message.x = 320;
-        this.message.y = 260;
+        message.x = 320;
+        message.y = 260;
 
         this.addChild(winGraphic);
 
-        money += 10;
-        wins++;
+        changeGameMoney(true);
+        changeGameWinsCounter();
 
         moneyText.updateText(false);
         moneyText.text = `Money:$${money}`;
         winsText.updateText(false);
         winsText.text = `Win: ${wins}`;
 
-        this.message.updateText(false);
-        this.message.text = "Win";
+        message.updateText(false);
+        message.text = "Win";
 
-        winGraphic.addChild(this.message);
+        winGraphic.addChild(message);
 
         window.addEventListener("click", () => {
           this.removeChild(winGraphic);
+          changeGameResult(false);
         });
-        this.gameWin = false;
+
+        spinButtonDisabled.visible = false;
+        spinButton.visible = true;
+        spinButton.interactive = true;
+        spinButton.buttonMode = true;
 
         setTimeout(() => {
           this.removeChild(winGraphic);
-          spinButtonDisabled.visible = false;
-          spinButton.visible = true;
-          spinButton.interactive = true;
-          spinButton.buttonMode = true;
         }, 3000);
       } else if (money) {
         spinButtonDisabled.visible = false;
         spinButton.visible = true;
         spinButton.interactive = true;
         spinButton.buttonMode = true;
-      }
 
-      /* if (money) {
-        spinButtonDisabled.visible = false;
-        spinButton.visible = true;
-        spinButton.interactive = true;
-        spinButton.buttonMode = true;
-      } */
+        this.removeChild(winGraphic);
+      }
     };
 
-    app.ticker.add((delta) => {
+    app.ticker.add(() => {
       // Update the slots.
 
       for (let i = 0; i < this.reels.length; i++) {
         const r = this.reels[i];
 
-        // Update blur filter y amount based on speed.
-        // This would be better if calculated with time in mind also. Now blur depends on frame rate.
-        // r.blur.blurY = (r.position.y - r.previousPosition) * 8;
         r.previousPosition = Number(r.position);
 
         // Update symbol positions on reel.
@@ -252,43 +251,49 @@ export class World extends Container {
           const s = r.symbols[j];
 
           const prevy = s.y; //prev position
-          s.y = ((Number(r.position) + j) % r.symbols.length) * this.SYMBOL_SIZE - this.SYMBOL_SIZE;
-          if (s.y < 0 && prevy > this.SYMBOL_SIZE) {
+          s.y = ((Number(r.position) + j) % r.symbols.length) * s.size - s.size;
+          if (s.y < 0 && prevy > s.size) {
             // Detect going over and swap a texture.
             s.texture = slotTextures[Math.floor(Math.random() * slotTextures.length)];
             s.scale.x = s.scale.y = 0.5;
 
             if (i == 0) {
-              this.resultArray[0] = r.symbols[reelsOffsetToReed[i]].texture.textureCacheIds[0];
+              resultArray[0] = r.symbols[reelsOffsetToReed[i]].texture.textureCacheIds[0];
             } else if (i == 1) {
-              this.resultArray[1] = r.symbols[reelsOffsetToReed[i]].texture.textureCacheIds[0];
+              resultArray[1] = r.symbols[reelsOffsetToReed[i]].texture.textureCacheIds[0];
             } else if (i == 2) {
-              this.resultArray[2] = r.symbols[reelsOffsetToReed[i]].texture.textureCacheIds[0];
+              resultArray[2] = r.symbols[reelsOffsetToReed[i]].texture.textureCacheIds[0];
             }
           }
         }
       }
     });
 
-    const tweening: any[] = [];
-    const tweenTo = (
-      object: any,
-      property: string,
-      target: number,
-      time: any,
-      easing: any,
-      onchange: any,
-      oncomplete: any
-    ) => {
+    interface TweenType {
+      object: any;
+      property: string;
+      propertyBeginValue?: number;
+      target: number;
+      easing: (t: number) => number;
+      time: number;
+      change: null;
+      complete: (() => void) | null;
+      start?: number;
+    }
+    interface TweenTypeArg {
+      args: TweenType;
+    }
+    const tweening: TweenType[] = [];
+    const tweenTo = <T extends TweenType>(args: T) => {
       const tween = {
-        object,
-        property,
-        propertyBeginValue: object[property],
-        target,
-        easing,
-        time,
-        change: onchange,
-        complete: oncomplete,
+        object: args.object,
+        property: args.property,
+        propertyBeginValue: args.object[args.property],
+        target: args.target,
+        easing: args.easing,
+        time: args.time,
+        change: args.change,
+        complete: args.complete,
         start: Date.now(),
       };
 
@@ -297,20 +302,24 @@ export class World extends Container {
     };
 
     // Listen for animate update.
-    app.ticker.add((delta) => {
+    app.ticker.add(() => {
       const now = Date.now();
       const remove = [];
 
       for (let i = 0; i < tweening.length; i++) {
         const t = tweening[i];
 
-        const phase = Math.min(1, (now - t.start) / t.time);
+        let phase = 0;
 
-        t.object[t.property] = lerp(t.propertyBeginValue, t.target, t.easing(phase));
-        if (t.change) t.change(t);
+        if (t.start) {
+          phase = Math.min(1, (now - t.start) / t.time);
+        }
+
+        t.object[t.property] = this.lerp(t.propertyBeginValue ? t.propertyBeginValue : 0, t.target, t.easing(phase));
+
         if (phase === 1) {
           t.object[t.property] = t.target;
-          if (t.complete) t.complete(t);
+          if (t.complete) t.complete();
           remove.push(t);
         }
       }
@@ -318,30 +327,31 @@ export class World extends Container {
         tweening.splice(tweening.indexOf(remove[i]), 1);
       }
     });
+  };
 
-    // Basic lerp funtion.
-    const lerp = (a1: number, a2: number, t: number) => {
-      return a1 * (1 - t) + a2 * t;
-    };
+  // Basic lerp funtion.
+  lerp = (a1: number, a2: number, t: number): number => {
+    return a1 * (1 - t) + a2 * t;
+  };
 
-    const easing = (amount: number) => {
-      return (t: number) => --t * t * ((amount + 1) * t + amount) + 1;
-    };
+  easing = (amount: number) => {
+    return (t: number) => --t * t * ((amount + 1) * t + amount) + 1;
+  };
 
-    const checkResult = () => {
-      const count: any = {};
+  checkResult = (): void => {
+    const count: any = {};
 
-      this.resultArray.forEach((i: any) => (count[i] = (count[i] || 0) + 1));
+    resultArray.forEach((i: string) => (count[i] = (count[i] || 0) + 1));
+    console.log(count);
 
-      for (const property in count) {
-        if (
-          (count[property] > 2 && property != "wild") ||
-          (count[property] == 2 && property == "wild") ||
-          (count[property] == 2 && count["wild"] == 1)
-        ) {
-          this.gameWin = true;
-        }
+    for (const property in count) {
+      if (
+        (count[property] > 2 && property != "wild") ||
+        (count[property] == 2 && property == "wild") ||
+        (count[property] == 2 && count["wild"] == 1)
+      ) {
+        changeGameResult(true);
       }
-    };
+    }
   };
 }
